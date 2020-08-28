@@ -1,0 +1,191 @@
+<!doctype html>
+<html ng-app="tsu">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/style.css">
+    <title>TSU</title>
+  </head>
+  <body>
+    <div class="container">
+      <br>
+      <div ng-controller="ticketController as tsuData">
+        <h1>Ticket Serving Utility</h1>
+          <br>
+        <div class="row">
+
+          <div class="col-md">
+            <div class="card">
+            <div class="card-header">
+              Status
+            </div>
+            <div class="card-body">
+              <h5 class="card-title">Current Status</h5>
+              <div ng-if="tsuData.serving">
+                <p class="card-text">Serving ticket: <span class="font-weight-bold">{{tsuData.currentTicket.tokenNumber}}</span></p>
+              </div>
+              <div ng-if="!tsuData.serving">
+                  <p class="card-text">Idle</p>
+              </div>
+            </div>
+          </div>
+          <br>
+          </div>
+          <div class="col-md">
+            <div class="card">
+              <div class="card-header">
+                Total serving Time
+              </div>
+              <div class="card-body">
+                <h5 class="card-title" id="totalTimer">00:00:00</h5>
+              </div>
+            </div>
+            <br>
+          </div>
+          <div class="col-md">
+            <div class="card">
+              <div class="card-header">
+                Total tickets issued
+              </div>
+              <div class="card-body">
+                <h5 class="card-title">{{tsuData.totalTicketCount}}</h5>
+              </div>
+            </div>
+            <br>
+          </div>
+          <div class="col-md">
+            <div class="card">
+            <div class="card-header">
+              Call Ticket
+            </div>
+            <div class="card-body">
+              <div ng-if="tsuData.tickets.length > 0">
+                <a href="" class="btn btn-success" ng-click="tsuData.callTicket(tsuData.currentTicket)">Call next Ticket</a>
+              </div>
+            </div>
+          </div>
+          <br>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md">
+            <div class="card">
+            <div class="card-header">
+              Issued Tickets:
+              <span class="float-right">count: {{tsuData.ticketCount}}</span>
+            </div>
+            <div class="card-body">
+              <h5 class="card-title">10 most recent issued tickets</h5>
+              <a href="" class="float-right" ng-click="tsuData.callRandom(tsuData.tickets)"><h6>Call Random</h6></a>
+              <ol class="unstyled card-text">
+                <li ng-repeat="ticket in tsuData.tickets">
+                  <span class="font-weight-bold">{{ticket.tokenNumber}}</span>
+                  <a href=""  ng-click="tsuData.callTicket(ticket)">call</a>  
+                </li>
+              </ol>
+            </div>
+          </div>
+          <br>
+          </div>
+
+          <div class="col-md">
+            <div class="card">
+            <div class="card-header">
+              No Show Tickets:
+              <span class="float-right">count: {{tsuData.noShowTicketCount}}</span>
+            </div>
+            <div class="card-body">
+              <h5 class="card-title">10 most recent No Show tickets</h5>
+              <a href="" class="float-right" ng-click="tsuData.callRandom(tsuData.noShowTickets)"><h6>Call Random</h6></a>
+              <ol class="unstyled card-text">
+
+                <li ng-repeat="ticket in tsuData.noShowTickets | limitTo : 10">
+                  <span class="font-weight-bold">{{ticket.tokenNumber}}</span>
+                  <a href=""  ng-click="tsuData.callTicket(ticket)">call</a>
+                </li>
+              </ol>
+            </div>
+          </div>
+          <br>
+          </div>
+
+          <div class="col-md">
+            <div class="card">
+          <div class="card-header">
+            Served Tickets:
+            <span class="float-right">count: {{tsuData.servedTicketCount}}</span>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">Served tickets</h5>
+            <ol class="unstyled card-text">
+              <li ng-repeat="ticket in tsuData.servedTickets">
+                <span class="font-weight-bold">{{ticket.tokenNumber}}</span>
+              </li>
+            </ol>
+          </div>
+        </div>
+        <br>
+          </div>
+        </div>
+
+
+        <div class="modal" id="currentTicketModal" tabindex="-1" role="dialog">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Serving ticket: 
+                  <span class="font-weight-bold">{{tsuData.currentTicket.tokenNumber}} </span>
+                  <br>
+                  <small class="pull-right" id="ticketTimer">00:00:00</small>
+                </h5>
+              </div>
+              <div class="modal-body">
+                <div ng-if="tsuData.currentTicketPayloads">
+                  <p class="card-text font-weight-bold">Payloads:</p>
+                  <ul class="unstyled card-text">
+                    <li ng-repeat="payload in tsuData.currentTicketPayloads">
+                      {{payload.signature}} | {{payload.text}} 
+                    </li>
+                  </ul>
+                </div>
+                <div ng-if="!tsuData.currentTicketPayloads">
+                  <p class="card-text font-weight-bold">No Payloads</p>
+                </div>
+                <br>
+                <form ng-submit="tsuData.addPayload(tsuData.currentTicket.id)">
+                  <input type="text" ng-model="tsuData.newPayloadText" size="30"
+                         placeholder="add payload" maxlength="140" required>
+                  <input class="btn-primary" type="submit" value="add">
+                </form>
+                <br>
+
+                <p class="card-text font-weight-bold">Transactions: {{tsuData.transactionCount}}</p>
+
+                <a href="" class="btn btn-primary" ng-click="tsuData.addTransaction()">Add Transaction</a>
+                <a href="" class="btn btn-success" ng-click="tsuData.serveTicket()">Served</a>
+                <a href="" class="btn btn-danger" ng-click="tsuData.noShowTicket()">No Show</a> 
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
+
+    <script src="js/easytimer.min.js"></script>
+    
+    <script src="js/tsu.js"></script>
+
+   
+  </body>
+</html>
